@@ -24,6 +24,10 @@
       </div>
     </div>
     <script>
+      // Solicitar permiso apenas cargue la web
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
 
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
@@ -120,30 +124,29 @@
       let timeoutRecarga;
       const TITULO_ORIGINAL = document.title;
       const TIEMPO_ESPERA = 60000; 
-
-      // Variable para saber si el usuario interactuó o vio la página en esta sesión
       let usuarioVioLaPagina = !document.hidden;
 
       document.addEventListener("visibilitychange", function() {
         if (document.hidden) {
-          // SOLO activamos la recarga si el usuario estaba viendo la página antes de irse
           if (usuarioVioLaPagina) {
-            document.title = "⚠️ ¡Vuelve! Se recargará en 1m";
+            document.title = "⚠️ ¡Vuelve pronto!";
             
+            // --- ENVIAR NOTIFICACIÓN ---
+            if (Notification.permission === "granted") {
+              new Notification("Mundo Falabella", {
+                body: "La página se recargará en 1 minuto si no regresas.",
+                icon: "TemplateData/favicon.ico" // Usa tu propio icono
+              });
+            }
+
             timeoutRecarga = setTimeout(function() {
-              // Antes de recargar, marcamos que la siguiente carga no debe autorecargarse
-              // (opcionalmente podrías usar sessionStorage, pero con la lógica de abajo basta)
               location.reload();
             }, TIEMPO_ESPERA);
-            
-            console.log("El usuario se fue. Temporizador iniciado.");
           }
         } else {
-          // Si el usuario vuelve, marcamos que ahora sí está viendo la página
           usuarioVioLaPagina = true; 
           document.title = TITULO_ORIGINAL;
           clearTimeout(timeoutRecarga);
-          console.log("Usuario regresó. Bucle evitado.");
         }
       });
 
