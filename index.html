@@ -24,8 +24,8 @@
       </div>
     </div>
     <script>
-      // Solicitar permiso apenas cargue la web
-      if (Notification.permission !== "granted") {
+      // 1. Solicitar permiso de notificaciones de inmediato
+      if (window.Notification && Notification.permission !== "granted") {
         Notification.requestPermission();
       }
 
@@ -36,12 +36,6 @@
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
       var warningBanner = document.querySelector("#unity-warning");
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
       function unityShowBanner(msg, type) {
         function updateBannerVisibility() {
           warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
@@ -73,31 +67,14 @@
         showBanner: unityShowBanner,
       };
 
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
         document.getElementsByTagName('head')[0].appendChild(meta);
         container.className = "unity-mobile";
         canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
       } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-
         canvas.style.width = "960px";
         canvas.style.height = "600px";
       }
@@ -109,44 +86,53 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                loadingBar.style.display = "none";
-                fullscreenButton.onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-              }).catch((message) => {
-                alert(message);
-              });
-            };
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+          fullscreenButton.onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+        }).catch((message) => {
+          alert(message);
+        });
+      };
 
       document.body.appendChild(script);
 
-      let timeoutRecarga;
+      // --- LÓGICA DE REDIRECCIÓN POR INACTIVIDAD ---
+      
+      let timeoutRedarga;
       const TITULO_ORIGINAL = document.title;
-      const TIEMPO_ESPERA = 60000; 
+      const TIEMPO_ESPERA = 60000; // 1 minuto
+      const URL_DESTINO = "hhttps://ciudadfalabella.metajungle.cl/login"; // CAMBIA ESTO POR TU URL
       let usuarioVioLaPagina = !document.hidden;
 
       document.addEventListener("visibilitychange", function() {
         if (document.hidden) {
+          // Si el usuario se va y ya había interactuado con la página
           if (usuarioVioLaPagina) {
-            document.title = "⚠️ ¡Vuelve pronto!";
+            document.title = "⚠️ ¡Sesión a punto de expirar!";
             
-            // --- ENVIAR NOTIFICACIÓN ---
+            // Enviar notificación
             if (Notification.permission === "granted") {
               new Notification("Mundo Falabella", {
-                body: "La página se recargará en 1 minuto si no regresas.",
-                icon: "TemplateData/favicon.ico" // Usa tu propio icono
+                body: "Has salido de la pestaña. En 1 minuto serás redirigido.",
+                icon: "TemplateData/favicon.ico"
               });
             }
 
-            timeoutRecarga = setTimeout(function() {
-              location.reload();
+            // Iniciar cuenta regresiva para redirección
+            timeoutRedarga = setTimeout(function() {
+              window.location.href = URL_DESTINO; 
             }, TIEMPO_ESPERA);
           }
         } else {
+          // Si el usuario regresa antes del minuto
           usuarioVioLaPagina = true; 
           document.title = TITULO_ORIGINAL;
-          clearTimeout(timeoutRecarga);
+          if (timeoutRedarga) {
+            clearTimeout(timeoutRedarga);
+            console.log("Redirección cancelada: el usuario volvió.");
+          }
         }
       });
 
