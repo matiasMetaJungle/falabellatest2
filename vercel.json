@@ -13,7 +13,7 @@
       "source": "/Build/(.*)\\.js\\.gz",
       "headers": [
         { "key": "Content-Encoding", "value": "gzip" },
-        { "key": "Content-Type", "value": "application/wasm" }
+        { "key": "Content-Type", "value": "application/wasm" },
         {
           "key": "Content-Type",
           "value": "application/javascript"
@@ -24,7 +24,7 @@
       "source": "/Build/(.*)\\.wasm\\.gz",
       "headers": [
         { "key": "Content-Encoding", "value": "gzip" },
-        { "key": "Content-Type", "value": "application/octet-stream" }
+        { "key": "Content-Type", "value": "application/octet-stream" },
         {
           "key": "Content-Type",
           "value": "application/wasm"
