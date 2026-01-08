@@ -117,28 +117,33 @@
 
       document.body.appendChild(script);
 
-      // --- Lógica de detección de visibilidad ---
       let timeoutRecarga;
       const TITULO_ORIGINAL = document.title;
-      const TIEMPO_ESPERA = 60000; // 60 segundos (1 minuto)
+      const TIEMPO_ESPERA = 60000; 
+
+      // Variable para saber si el usuario interactuó o vio la página en esta sesión
+      let usuarioVioLaPagina = !document.hidden;
 
       document.addEventListener("visibilitychange", function() {
         if (document.hidden) {
-          // 1. El usuario se fue: Cambiamos el título para avisar
-          document.title = "⚠️ ¡Vuelve! Se recargará en 1m";
-          
-          // 2. Iniciamos la cuenta regresiva
-          timeoutRecarga = setTimeout(function() {
-            location.reload();
-          }, TIEMPO_ESPERA);
-          
-          console.log("Temporizador de recarga iniciado: 60s");
+          // SOLO activamos la recarga si el usuario estaba viendo la página antes de irse
+          if (usuarioVioLaPagina) {
+            document.title = "⚠️ ¡Vuelve! Se recargará en 1m";
+            
+            timeoutRecarga = setTimeout(function() {
+              // Antes de recargar, marcamos que la siguiente carga no debe autorecargarse
+              // (opcionalmente podrías usar sessionStorage, pero con la lógica de abajo basta)
+              location.reload();
+            }, TIEMPO_ESPERA);
+            
+            console.log("El usuario se fue. Temporizador iniciado.");
+          }
         } else {
-          // 3. El usuario volvió: Cancelamos todo
-          clearTimeout(timeoutRecarga);
+          // Si el usuario vuelve, marcamos que ahora sí está viendo la página
+          usuarioVioLaPagina = true; 
           document.title = TITULO_ORIGINAL;
-          
-          console.log("Usuario regresó. Recarga cancelada.");
+          clearTimeout(timeoutRecarga);
+          console.log("Usuario regresó. Bucle evitado.");
         }
       });
 
